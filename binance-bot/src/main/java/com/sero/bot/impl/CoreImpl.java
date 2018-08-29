@@ -57,9 +57,9 @@ public class CoreImpl implements Core {
 			Target current = bearish.getCurrent();
 			if(current.isBought())
 				return false;
-			Boolean isequal = current.isEqual();
-			Boolean isoverstep = current.isSkipped();
-			if ((isequal || isoverstep) && current.isWaiting())
+			Boolean isequals = current.isEqual() && current.isWaiting();
+			Boolean isskipped = current.isAbove() && current.isSkipped();
+			if (isequals|| isskipped)
 				return true;
 			return false;
 		}

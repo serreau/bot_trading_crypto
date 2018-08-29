@@ -3,6 +3,7 @@ package com.sero.bot.model;
 import java.util.HashMap;
 import com.sero.bot.model.Target;
 import com.sero.bot.model.Target.Position;
+import com.sero.bot.model.Target.State;
 
 @SuppressWarnings({ "serial" })
 public class TargetMap extends HashMap<Integer, Target>{
@@ -28,13 +29,13 @@ public class TargetMap extends HashMap<Integer, Target>{
 				v.setPosition(Position.ABOVE);
 				if (current.moreThan(v))
 					current = v;
-					current.isSkipped(true);
+					current.setState(State.SKIPPED);
 			}
 			else if (v.lessThan(price)) {
 				v.setPosition(Position.BELOW);
 				if (current.lessThan(v)) {
 					current = v;
-					current.isSkipped(true);
+					current.setState(State.SKIPPED);
 				}
 			}
 		});

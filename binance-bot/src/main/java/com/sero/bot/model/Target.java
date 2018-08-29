@@ -17,6 +17,7 @@ public class Target extends Observable{
 
 	public static enum State {
 		WAITING,
+		SKIPPED,
 		BOUGHT,
 		REBOUGHT,
 		SOLD
@@ -128,17 +129,13 @@ public class Target extends Observable{
 		return getPrice() == v.getPrice();
 	}
 	
+	public Boolean isSkipped() {
+		return getState().equals(State.SKIPPED);
+	}
+
 	@Override
 	public String toString() {
 		return "price : "+price;
-	}
-
-	public void isSkipped(Boolean b) {
-		skipped = b;
-	}
-	
-	public Boolean isSkipped() {
-		return skipped;
 	}
 
 }

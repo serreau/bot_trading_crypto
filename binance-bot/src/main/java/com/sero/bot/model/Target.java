@@ -7,12 +7,14 @@ import com.sero.bot.config.Constants;
 public class Target extends Observable{
 	private Integer index;
 	private Double price;
-	private Double margemin;
-	private Double margemax;
+	private Double relativemargemin;
+	private Double relativemargemax;
 	private Double amount;
 	private State state;
 	private Position position;
+	private Boolean skipped;
 	
+
 	public static enum State {
 		WAITING,
 		BOUGHT,
@@ -21,18 +23,33 @@ public class Target extends Observable{
 	}
 	
 	public static enum Position {
-		TOP,
+		ABOVE,
 		EQUAL,
-		DEEP
+		BELOW
 	}
 	
 	public Target(Integer index, Double price) {
 		this.price = price;
 		this.index = index;
-		margemin = price-(price*Constants.MARGIN);
-		margemax = price+((price*Constants.MARGIN));
 		setState(State.WAITING);
 		setPosition(position);
+	}
+	
+	public void setMarge(Target reference) {
+		relativemargemin = price-(reference.getPrice()*Constants.MARGIN);
+		relativemargemax = price+((reference.getPrice()*Constants.MARGIN));
+	}
+	
+	public Boolean equals(Double price) {
+		return price > relativemargemin && price < relativemargemax;
+	}
+	
+	public Boolean moreThan(Double price) {
+		return price > relativemargemax;
+	}
+	
+	public Boolean lessThan(Double price) {
+		return price < relativemargemin;
 	}
 	
 	public State getState() {
@@ -54,23 +71,6 @@ public class Target extends Observable{
 	public Integer getIndex() {
 		return index;
 	}
-	
-	public Boolean equals(Double price) {
-		return price > margemin && price < margemax;
-	}
-	
-	public Boolean moreThan(Double price) {
-		return price > margemax;
-	}
-	
-	public Boolean lessThan(Double price) {
-		return price < margemin;
-	}
-
-	@Override
-	public String toString() {
-		return "price : "+price;
-	}
 
 	public Double getAmount() {
 		return amount;
@@ -88,19 +88,57 @@ public class Target extends Observable{
 		this.position = position;
 	}
 
-	public boolean isWaiting() {
+	public Boolean isWaiting() {
 		return getState().equals(State.WAITING);
 	}
 	
-	public boolean isBought() {
+	public Boolean isBought() {
 		return getState().equals(State.BOUGHT);
 	}
 	
-	public boolean isRebought() {
+	public Boolean isRebought() {
 		return getState().equals(State.REBOUGHT);
 	}
 	
-	public boolean isSold() {
+	public Boolean isSold() {
 		return getState().equals(State.SOLD);
 	}
+
+	public Boolean isAbove() {
+		return getPosition().equals(Position.ABOVE);
+	}
+	
+	public Boolean isEqual() {
+		return getPosition().equals(Position.EQUAL);
+	}
+	
+	public Boolean isBelow() {
+		return getPosition().equals(Position.BELOW);
+	}
+
+	public Boolean moreThan(Target v) {
+		return getPrice() > v.getPrice();
+	}
+	
+	public Boolean lessThan(Target v) {
+		return getPrice() < v.getPrice();
+	}
+	
+	public Boolean equals(Target v) {
+		return getPrice() == v.getPrice();
+	}
+	
+	@Override
+	public String toString() {
+		return "price : "+price;
+	}
+
+	public void isSkipped(Boolean b) {
+		skipped = b;
+	}
+	
+	public Boolean isSkipped() {
+		return skipped;
+	}
+
 }

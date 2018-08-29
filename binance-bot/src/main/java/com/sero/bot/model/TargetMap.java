@@ -2,65 +2,58 @@ package com.sero.bot.model;
 
 import java.util.HashMap;
 import com.sero.bot.model.Target;
+import com.sero.bot.model.Target.Position;
 
 @SuppressWarnings({ "serial" })
 public class TargetMap extends HashMap<Integer, Target>{
-	private Target top;
-	private Target deep;
-	
-	public static enum Move {
-		UP,
-		DOWN
-	}
+	private Target current;
+	private Target reference;
+
 	
 	@Override
 	public Target put(Integer key, Target target) {
+		if(key.equals(0))
+			reference = current = target;
+		target.setMarge(reference);
 		return super.put(key, target);
-	}
-	
-//	public void move(Move move) {
-//		if(move.equals(Move.UP)) {
-//			deep = top;
-//			top = get(top.getIndex()+1);
-//		}
-//		if(move.equals(Move.DOWN)) {
-//			top = deep;
-//			deep = get(deep.getIndex()-1);
-//		}
-//	}
-
-	public Target getDeep() {
-		return deep;
-	}
-
-	public void setDeep(Target deep) {
-		this.deep = deep;
-	}
-
-	public Target getTop() {
-		return top;
-	}
-
-	public void setTop(Target top) {
-		this.top = top;
 	}
 
 	public void refresh(Double price) {
 		forEach((k, v) -> {
 			if (v.equals(price)) {
-				v.setPosition(Target.Position.EQUAL);
+				v.setPosition(Position.EQUAL);
+				current = v;
 			}
 			else if (v.moreThan(price)) {
-				v.setPosition(Target.Position.TOP);
-				if (v.lessThan(top.getPrice()))
-					top = v;
+				v.setPosition(Position.ABOVE);
+				if (current.moreThan(v))
+					current = v;
+					current.isSkipped(true);
 			}
-			else if (v.lessThan(price)){
-				v.setPosition(Target.Position.DEEP);
-				if (v.moreThan(deep.getPrice()))
-					deep = v;
+			else if (v.lessThan(price)) {
+				v.setPosition(Position.BELOW);
+				if (current.lessThan(v)) {
+					current = v;
+					current.isSkipped(true);
+				}
 			}
 		});
+	}
+
+	public Target getReference() {
+		return reference;
+	}
+
+	public void setReference(Target reference) {
+		this.reference = reference;
+	}
+
+	public Target getCurrent() {
+		return current;
+	}
+
+	public void setCurrent(Target current) {
+		this.current = current;
 	}
 
 }

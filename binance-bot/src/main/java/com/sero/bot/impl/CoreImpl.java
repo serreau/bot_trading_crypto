@@ -16,12 +16,6 @@ public class CoreImpl implements Core {
 	Rules rules;
 	Actions actions;
 	
-	public enum Choice {
-		BUY,
-		SELL,
-		WAIT
-	}
-	
 	@Override
 	public void init(Trade trade) {
 		wallet = new Wallet(Constants.CAPITAL);
@@ -36,44 +30,53 @@ public class CoreImpl implements Core {
 		Double interval = startprice/-Constants.BEARISH_TARGETS_SUM;
 		bearish.put(0, new Target(0, startprice));
 		bearish.get(0).setState(Target.State.WAITING);
-		for (int i = -1; i > -Constants.BEARISH_TARGETS_SUM; i--) {
+		for (int i = 0; i > -Constants.BEARISH_TARGETS_SUM; i--) {
 			Double p = startprice-interval*i;
-			bearish.put(i, new Target(i, p));
+			Target target = new Target(i, p);
+			target.setState(State.WAITING);
+			bearish.put(i, target);
 		}
 	}
 
 	@Override
 	public void run(Parameter parameter) {
 		Trade trade = parameter.getInstance();
-//		bearish.refresh(trade.getP());
-		if(rules.toBuy(trade.getP(), bearish))
+		bearish.refresh(trade.getP());
+		if(rules.topToBuy(trade.getP()))
 			actions.buy(trade.getP());
-		else if(rules.toSell(trade.getP(), bearish))
+		else
+		if(rules.deepToBuy(trade.getP()))
+			actions.buy(trade.getP());
+		else 
+		if(rules.topToSell(trade.getP()))
 			actions.sell(trade.getP());
 	}
 
 	private class Rules{
-		
-		public Boolean toBuy(Double price, TargetMap bearish) {
-			Target top = bearish.getTop();
-			Target deep = bearish.getDeep();
-			Boolean istopequal = top.getPosition().equals(Position.EQUAL);
-			Boolean isdeepequal = deep.getPosition().equals(Position.EQUAL);
-			
-			if (istopequal && top.isWaiting())
+		public Boolean deepToBuy(Double price) {
+			Target current = bearish.getCurrent();
+			if(current.isBought())
+				return false;
+			Boolean isequal = current.isEqual();
+			Boolean isoverstep = current.isSkipped();
+			if ((isequal || isoverstep) && current.isWaiting())
 				return true;
-			else if (isdeepequal && deep.isWaiting())
-				return true;
-			
 			return false;
 		}
-		public Boolean toSell(Double price, TargetMap bearish) {
-			return true;
+		public Boolean topToBuy(Double price) {
+			//TODO
+			return false;
+		}
+		public Boolean topToSell(Double price) {
+			//TODO
+			return false;
 		}
 	}
 	
 	private class Actions{
 		public void buy(Double price) {
+			
+//			wallet.buy(amount);
 		}
 		public void sell(Double price) {
 		}

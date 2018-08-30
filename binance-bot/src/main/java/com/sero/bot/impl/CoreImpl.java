@@ -28,14 +28,16 @@ public class CoreImpl implements Core {
 	}
 
 	private void initBearishTargets(Double startprice) {
-		Double interval = startprice/-Constants.BEARISH_TARGETS_SUM;
+		Double interval = startprice/Constants.BEARISH_TARGETS_SUM;
 		bearish.setIntervale(interval);
 		for (int i = 0; i > -Constants.BEARISH_TARGETS_SUM; i--) {
-			Double p = startprice-interval*i;
+			Double p = startprice+interval*i;
 			Target target = new Target(i, p);
-			target.setState(State.WAITING);
 			bearish.put(i, target);
 		}
+		bearish.setState(State.WAITING);
+		bearish.setMarge(bearish.get(0));
+		
 		System.out.println(bearish);
 	}
 	

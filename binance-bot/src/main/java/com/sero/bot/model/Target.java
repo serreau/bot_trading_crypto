@@ -12,6 +12,7 @@ public class Target extends Observable{
 	private Double amount;
 	private State state;
 	private Position position;
+	private Target reference;
 	
 
 	public static enum State {
@@ -135,6 +136,14 @@ public class Target extends Observable{
 	@Override
 	public String toString() {
 		return "[index : "+index+", price : "+Math.round(price)+", state : "+state+", position : "+position+"]";
+	}
+
+	public Target getReference() {
+		return reference;
+	}
+
+	public void setReference(Target reference) {
+		this.reference = reference;
 	}
 
 }

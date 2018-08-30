@@ -3,6 +3,7 @@ package com.sero.bot.model;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.sero.bot.config.Constants;
 import com.sero.bot.model.Target.Position;
 import com.sero.bot.model.Target.State;
 
@@ -15,9 +16,6 @@ public class TargetMap extends HashMap<Integer, Target> {
 	
 	@Override
 	public Target put(Integer key, Target target) {
-		if(key.equals(0))
-			reference = current = target;
-		target.setMarge(reference);
 		return super.put(key, target);
 	}
 
@@ -47,20 +45,33 @@ public class TargetMap extends HashMap<Integer, Target> {
 		}
 	}
 	
-	public void refresh(State state) {
+	public void setState(State state) {
 		for (Map.Entry<Integer, Target> entry : this.entrySet())
 		{
 			Target v = entry.getValue();
 			v.setState(state);
 		}
 	}
+	
+	public void setMarge(Target reference) {
+		for (Map.Entry<Integer, Target> entry : this.entrySet())
+		{
+			Target v = entry.getValue();
+			v.setMarge(reference);
+		}
+	}
+	
+	public void setReference(Target reference) {
+		this.reference = reference;
+		for (Map.Entry<Integer, Target> entry : this.entrySet())
+		{
+			Target v = entry.getValue();
+			v.setReference(reference);
+		}
+	}
 
 	public Target getReference() {
 		return reference;
-	}
-
-	public void setReference(Target reference) {
-		this.reference = reference;
 	}
 
 	public Target getCurrent() {
@@ -83,24 +94,21 @@ public class TargetMap extends HashMap<Integer, Target> {
 		return get(current.getIndex()-1).isRebought();
 	}
 
-	@Override
-	public String toString() {
-		String s = "";
-		for (Map.Entry<Integer, Target> entry : this.entrySet())
-		{
-			Target v = entry.getValue();
-			s += v.toString()+"\n";
-		}
-		s += "\n";
-		return s;
-	}
-
 	public Double getIntervale() {
 		return intervale;
 	}
 
 	public void setIntervale(Double intervale) {
 		this.intervale = intervale;
+	}
+	
+	@Override
+	public String toString() {
+		String s = "";
+		for (int i=0 ; i>-Constants.BEARISH_TARGETS_SUM ; i--)
+			s += get(i).toString()+"\n";
+		s += "\n";
+		return s;
 	}
 
 }

@@ -12,7 +12,6 @@ public class Target extends Observable{
 	private Double amount;
 	private State state;
 	private Position position;
-	private Boolean skipped;
 	
 
 	public static enum State {
@@ -46,11 +45,11 @@ public class Target extends Observable{
 	}
 	
 	public Boolean moreThan(Double price) {
-		return price > relativemargemax;
+		return price < relativemargemin;
 	}
 	
 	public Boolean lessThan(Double price) {
-		return price < relativemargemin;
+		return price > relativemargemax;
 	}
 	
 	public State getState() {
@@ -135,7 +134,7 @@ public class Target extends Observable{
 
 	@Override
 	public String toString() {
-		return "price : "+price;
+		return "[index : "+index+", price : "+price+", state : "+state+", position : "+position+"]";
 	}
 
 }

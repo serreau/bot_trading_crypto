@@ -4,7 +4,6 @@ import com.sero.bot.config.Constants;
 import com.sero.bot.interfaces.Core;
 import com.sero.bot.interfaces.Parameter;
 import com.sero.bot.model.Target;
-import com.sero.bot.model.Target.Position;
 import com.sero.bot.model.Target.State;
 import com.sero.bot.model.TargetMap;
 import com.sero.bot.model.Trade;
@@ -13,6 +12,7 @@ import com.sero.bot.model.Wallet;
 public class CoreImpl implements Core {
 	Wallet wallet;
 	TargetMap bearish;
+	TargetMap bullish;
 	Rules rules;
 	Actions actions;
 	
@@ -20,23 +20,35 @@ public class CoreImpl implements Core {
 	public void init(Trade trade) {
 		wallet = new Wallet(Constants.CAPITAL);
 		bearish = new TargetMap();
+		bullish = new TargetMap();
 		rules = new Rules();
 		actions = new Actions();
 		initBearishTargets(trade.getP());
-		System.out.println(bearish.toString());
+//		initBullishTargets(trade.getP());
 	}
 
 	private void initBearishTargets(Double startprice) {
 		Double interval = startprice/-Constants.BEARISH_TARGETS_SUM;
-		bearish.put(0, new Target(0, startprice));
-		bearish.get(0).setState(Target.State.WAITING);
+		bearish.setIntervale(interval);
 		for (int i = 0; i > -Constants.BEARISH_TARGETS_SUM; i--) {
 			Double p = startprice-interval*i;
 			Target target = new Target(i, p);
 			target.setState(State.WAITING);
 			bearish.put(i, target);
 		}
+		System.out.println(bearish);
 	}
+	
+//	private void initBullishTargets(Double startprice) {
+//		Double interval = startprice/bearish.getIntervale()/Constants.BULLISH_TARGETS_SUM;
+//		bullish.setIntervale(interval);
+//		for (int i = 1; i < Constants.BEARISH_TARGETS_SUM; i++) {
+//			Double p = startprice-interval*i;
+//			Target target = new Target(i, p);
+//			target.setState(State.WAITING);
+//			bearish.put(i, target);
+//		}
+//	}
 
 	@Override
 	public void run(Parameter parameter) {
@@ -53,32 +65,51 @@ public class CoreImpl implements Core {
 	}
 
 	private class Rules{
+		public Boolean topToBuy(Double price) {
+			Target current = bearish.getCurrent();
+			Boolean isequals = current.isEqual();
+			Boolean isskipped = current.isBelow() && current.isSkipped();
+			Boolean isbought = current.isBought();
+			Boolean ispreviousbought = bearish.isPreviousBought() || bearish.isPreviousRebought();
+			if ((isequals || isskipped) && isbought && ispreviousbought) {
+				current.setState(State.REBOUGHT);
+				System.out.println("price : "+price+"\n"+bearish.toString());
+				return true;
+			}
+			return false;
+		}
 		public Boolean deepToBuy(Double price) {
 			Target current = bearish.getCurrent();
 			if(current.isBought())
 				return false;
-			Boolean isequals = current.isEqual() && current.isWaiting();
-			Boolean isskipped = current.isAbove() && current.isSkipped();
-			if (isequals|| isskipped)
+			boolean isequals = (current.isEqual() && current.isWaiting());
+			boolean isskipped = current.isAbove() && current.isSkipped();
+			if (isequals|| isskipped) {
+				current.setState(State.BOUGHT);
+				System.out.println("price : "+price+"\n"+bearish.toString());
 				return true;
-			return false;
-		}
-		public Boolean topToBuy(Double price) {
-			//TODO
+			}
 			return false;
 		}
 		public Boolean topToSell(Double price) {
-			//TODO
+			Target current = bearish.getCurrent();
+			if(current.isRebought() && current.isAbove()) {
+				current.setState(State.SOLD);
+				System.out.println("price : "+price+"\n"+bearish.toString());
+				return true;
+			}
 			return false;
 		}
 	}
 	
 	private class Actions{
 		public void buy(Double price) {
+//			System.out.println(price +"\n BUY : "+bearish.toString());
 			
-//			wallet.buy(amount);
 		}
 		public void sell(Double price) {
+//			System.out.println(price +"\n SELL : "+bearish.toString());
+			initBearishTargets(price);
 		}
 	}
 }

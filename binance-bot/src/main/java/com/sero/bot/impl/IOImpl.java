@@ -96,13 +96,11 @@ public class IOImpl implements IO {
 	public Trade getLastTrade() {
 		Trade trade = new Trade();
 //		{"a":56960000,"p":"6489.75000000","q":"0.01248300","f":64232155,"l":64232155,"T":1534529026923,"m":false}
-		trade.setA(56960000);
-		trade.setP(6489.75000000);
-		trade.setQ(0.01248300);
-		trade.setF(64232155);
-		trade.setL(64232155);
-		trade.setT(1534529026923L);
-		trade.setM(false);
+		trade.setA(0);
+		trade.setP(4261.48);
+		trade.setQ(0.1);
+		trade.setT(1502942428322L);
+		trade.setM(true);
 		
 		return trade;
 		

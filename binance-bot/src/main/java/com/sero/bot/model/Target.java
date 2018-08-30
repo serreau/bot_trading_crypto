@@ -36,8 +36,8 @@ public class Target extends Observable{
 	}
 	
 	public void setMarge(Target reference) {
-		relativemargemin = price-(reference.getPrice()*Constants.MARGIN);
-		relativemargemax = price+((reference.getPrice()*Constants.MARGIN));
+		relativemargemin = price-(reference.getPrice()*Constants.MARGIN/100);
+		relativemargemax = price+((reference.getPrice()*Constants.MARGIN/100));
 	}
 	
 	public Boolean equals(Double price) {
@@ -134,7 +134,7 @@ public class Target extends Observable{
 
 	@Override
 	public String toString() {
-		return "[index : "+index+", price : "+price+", state : "+state+", position : "+position+"]";
+		return "[index : "+index+", price : "+Math.round(price)+", state : "+state+", position : "+position+"]";
 	}
 
 }

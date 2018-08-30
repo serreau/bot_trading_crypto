@@ -20,8 +20,8 @@ public class Bot implements BotEvent{
 	private void start() {
 		System.out.println("Bot.run()");
 //		io.connect();
-		core.init(io.getLastTrade());
 //		io.getAllOnFile("BTCUSDT", "historiqueBTCUSDT.txt");
+		core.init(io.getLastTrade());
 		io.gsonReader("historiqueBTCUSDT.txt", this);
 	}
 

@@ -69,9 +69,9 @@ public class CoreImpl implements Core {
 			Target current = bearish.getCurrent();
 			Boolean isequals = current.isEqual();
 			Boolean isskipped = current.isBelow() && current.isSkipped();
-			Boolean isbought = current.isBought();
+			Boolean isnotrebought = !current.isRebought();
 			Boolean ispreviousbought = bearish.isPreviousBought() || bearish.isPreviousRebought();
-			if ((isequals || isskipped) && isbought && ispreviousbought) {
+			if ((isequals || isskipped) && ispreviousbought && isnotrebought) {
 				current.setState(State.REBOUGHT);
 				System.out.println("price : "+price+"\n"+bearish.toString());
 				return true;

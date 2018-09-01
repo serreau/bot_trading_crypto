@@ -38,10 +38,52 @@ public class CoreImpl implements Core {
 	public void run(Parameter parameter) {
 		Trade trade = parameter.getInstance();
 		bearish.refresh(trade.getP());
+		if(rules.topToBuy(trade.getP()))
+			actions.buy(trade.getP());
+		else
+		if(rules.deepToBuy(trade.getP()))
+			actions.buy(trade.getP());
+		else 
+		if(rules.topToSell(trade.getP()))
+			actions.sell(trade.getP());
 	}
 
 	private class Rules{
-		
+		public Boolean topToBuy(Double price) {
+			Target current = bearish.getCurrent();
+			Boolean isequals = current.isEqual();
+			Boolean isskipped = current.isBelow() && current.isSkipped();
+			Boolean isnotrebought = !current.isRebought();
+			Boolean ispreviousbought = bearish.isPreviousBought() || bearish.isPreviousRebought();
+			if ((isequals || isskipped) && ispreviousbought && isnotrebought) {
+				current.setState(State.REBOUGHT);
+				System.out.println("price : "+price+"\n"+bearish.toString());
+				return true;
+			}
+			return false;
+		}
+		public Boolean deepToBuy(Double price) {
+			Target current = bearish.getCurrent();
+			if(current.isBought())
+				return false;
+			boolean isequals = (current.isEqual() && current.isWaiting());
+			boolean isskipped = current.isAbove() && current.isSkipped();
+			if (isequals|| isskipped) {
+				current.setState(State.BOUGHT);
+				System.out.println("price : "+price+"\n"+bearish.toString());
+				return true;
+			}
+			return false;
+		}
+		public Boolean topToSell(Double price) {
+			Target current = bearish.getCurrent();
+			if(current.isRebought() && current.isAbove()) {
+				current.setState(State.SOLD);
+				System.out.println("price : "+price+"\n"+bearish.toString());
+				return true;
+			}
+			return false;
+		}
 	}
 	
 	private class Actions{

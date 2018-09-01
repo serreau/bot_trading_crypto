@@ -2,57 +2,63 @@ package com.sero.bot.model;
 
 import java.util.Observable;
 
-import com.sero.bot.config.Constants;
-
 public class Target extends Observable{
-	private Integer index;
+	private Double gap;
 	private Double price;
-	private Double relativemargemin;
-	private Double relativemargemax;
-	private Double amount;
+	private Target next;
+	private Target previous;
 	private State state;
-	private Position position;
-	private Target reference;
 	
-
-	public static enum State {
-		WAITING,
+	public enum State{
+		WAINTING,
 		SKIPPED,
 		BOUGHT,
 		REBOUGHT,
 		SOLD
 	}
 	
-	public static enum Position {
-		ABOVE,
+	public enum Position{
+		TOP,
 		EQUAL,
-		BELOW
+		DEEP
 	}
-	
-	public Target(Integer index, Double price) {
+
+	public Target(Double price) {
+		this.setPrice(price);
+	}
+
+	public Double getGap() {
+		return gap;
+	}
+
+	public void setGap(Double gap) {
+		this.gap = gap;
+	}
+
+	public Double getPrice() {
+		return price;
+	}
+
+	public void setPrice(Double price) {
 		this.price = price;
-		this.index = index;
-		setState(State.WAITING);
-		setPosition(position);
 	}
-	
-	public void setMarge(Target reference) {
-		relativemargemin = price-(reference.getPrice()*Constants.MARGIN/100);
-		relativemargemax = price+((reference.getPrice()*Constants.MARGIN/100));
+
+	public Target getNext() {
+		return next;
 	}
-	
-	public Boolean equals(Double price) {
-		return price > relativemargemin && price < relativemargemax;
+
+	public void setNext(Target next) {
+		this.next = next;
 	}
-	
-	public Boolean moreThan(Double price) {
-		return price < relativemargemin;
+
+	public Target getPrevious() {
+		return previous;
 	}
-	
-	public Boolean lessThan(Double price) {
-		return price > relativemargemax;
+
+	public void setPrevious(Target previous) {
+		this.previous = previous;
 	}
-	
+
 	public State getState() {
 		return state;
 	}
@@ -60,90 +66,4 @@ public class Target extends Observable{
 	public void setState(State state) {
 		this.state = state;
 	}
-
-	public double getPrice() {
-		return price;
-	}
-	
-	public void setPrice(double price) {
-		this.price = price;
-	}
-
-	public Integer getIndex() {
-		return index;
-	}
-
-	public Double getAmount() {
-		return amount;
-	}
-
-	public void setAmount(Double amount) {
-		this.amount = amount;
-	}
-
-	public Position getPosition() {
-		return position;
-	}
-
-	public void setPosition(Position position) {
-		this.position = position;
-	}
-
-	public Boolean isWaiting() {
-		return getState().equals(State.WAITING);
-	}
-	
-	public Boolean isBought() {
-		return getState().equals(State.BOUGHT);
-	}
-	
-	public Boolean isRebought() {
-		return getState().equals(State.REBOUGHT);
-	}
-	
-	public Boolean isSold() {
-		return getState().equals(State.SOLD);
-	}
-
-	public Boolean isAbove() {
-		return getPosition().equals(Position.ABOVE);
-	}
-	
-	public Boolean isEqual() {
-		return getPosition().equals(Position.EQUAL);
-	}
-	
-	public Boolean isBelow() {
-		return getPosition().equals(Position.BELOW);
-	}
-
-	public Boolean moreThan(Target v) {
-		return getPrice() > v.getPrice();
-	}
-	
-	public Boolean lessThan(Target v) {
-		return getPrice() < v.getPrice();
-	}
-	
-	public Boolean equals(Target v) {
-		return getPrice() == v.getPrice();
-	}
-	
-	public Boolean isSkipped() {
-		return getState().equals(State.SKIPPED);
-	}
-
-	@Override
-	public String toString() {
-		return "[index : "+index+", price : "+Math.round(price)+", state : "+state+", position : "+position+"]";
-	}
-
-	public Target getReference() {
-		return reference;
-	}
-
-	public void setReference(Target reference) {
-		this.reference = reference;
-	}
-
 }

@@ -73,8 +73,12 @@ public class IOImpl implements IO {
 			}while(!jr.peek().equals(JsonToken.END_DOCUMENT));
 		    jr.close();
 		}
-		catch (Exception e) {
-		    System.out.println("TERMINÉ");
+		catch (UnsupportedEncodingException e) {
+		    e.printStackTrace();
+		} catch (FileNotFoundException e) {
+		    e.printStackTrace();
+		} catch (IOException e) {
+		    e.printStackTrace();
 		}
 	}
 
@@ -92,7 +96,6 @@ public class IOImpl implements IO {
 	public Trade getLastTrade() {
 		Trade trade = new Trade();
 //		{"a":56960000,"p":"6489.75000000","q":"0.01248300","f":64232155,"l":64232155,"T":1534529026923,"m":false}
-//		{"a":0,"p":"4261.48000000","q":"0.10000000","f":0,"l":0,"T":1502942428322,"m":true}
 		trade.setA(0);
 		trade.setP(4261.48);
 		trade.setQ(0.1);

@@ -8,6 +8,8 @@ public class Target extends Observable{
 	private Target next;
 	private Target previous;
 	private State state;
+	private Position position;
+	
 	
 	public enum State{
 		WAINTING,
@@ -65,5 +67,13 @@ public class Target extends Observable{
 
 	public void setState(State state) {
 		this.state = state;
+	}
+
+	public Position getPosition() {
+		return position;
+	}
+
+	public void setPosition(Position position) {
+		this.position = position;
 	}
 }

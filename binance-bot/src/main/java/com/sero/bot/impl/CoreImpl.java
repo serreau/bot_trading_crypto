@@ -3,97 +3,125 @@ package com.sero.bot.impl;
 import com.sero.bot.config.Constants;
 import com.sero.bot.interfaces.Core;
 import com.sero.bot.interfaces.Parameter;
-import com.sero.bot.model.TargetMap;
+import com.sero.bot.model.Target;
+import com.sero.bot.model.Target.Location;
+import com.sero.bot.model.Target.State;
 import com.sero.bot.model.Trade;
 import com.sero.bot.model.Wallet;
 
 public class CoreImpl implements Core {
 	Wallet wallet;
-	TargetMap bearish;
-	TargetMap bullish;
+	Target bearish;
+	Target bullish;
 	Rules rules;
 	Actions actions;
 	
 	@Override
 	public void init(Trade trade) {
 		wallet = new Wallet(Constants.CAPITAL);
-		
+//		
 		rules = new Rules();
 		actions = new Actions();
+		
 		initBearishTargets(trade.getP());
 		initBullishTargets(trade.getP());
 	}
 
 	private void initBearishTargets(Double startprice) {
-		bearish = new TargetMap(startprice);
-		bearish.setGap(startprice/Constants.BEARISH_DIVISOR);
+		bearish = new Target(startprice);
+		bearish.setMarge(startprice*Constants.MARGIN);
+		bearish.setInterval(startprice/Constants.BEARISH_DIVISOR);
+		bearish.setDirection(Location.BELOW);
+		bearish.setState(State.WAITING);
+		
+		Target next = bearish.createNext();
+		next.setMarge(bearish.getMarge());
+		next.setInterval(bearish.getInterval());
+		next.setDirection(bearish.getDirection());
+		
 	}
 	
 	private void initBullishTargets(Double startprice) {
-		bullish = new TargetMap(startprice);
-		bearish.setGap(startprice/Constants.BEARISH_DIVISOR);
+		bullish = new Target(startprice);
+		bullish.setMarge(startprice*Constants.MARGIN);
+		bullish.setInterval(startprice/Constants.BULLISH_DIVISOR);
+		bullish.setDirection(Location.ABOVE);
+		bullish.setState(State.WAITING);
+		
+		Target next = bullish.createNext();
+		next.setMarge(bullish.getMarge());
+		next.setInterval(bullish.getInterval());
+		next.setDirection(bullish.getDirection());
 	}
 
 	@Override
 	public void run(Parameter parameter) {
 		Trade trade = parameter.getInstance();
 		bearish.refresh(trade.getP());
-		if(rules.topToBuy(trade.getP()))
-			actions.buy(trade.getP());
+		bullish.refresh(trade.getP());
+		if(rules.toBuy(trade.getP(), bullish))
+			actions.buyBullish(trade.getP());
 		else
-		if(rules.deepToBuy(trade.getP()))
-			actions.buy(trade.getP());
-		else 
-		if(rules.topToSell(trade.getP()))
-			actions.sell(trade.getP());
+		if(rules.toBuy(trade.getP(), bearish))
+			actions.buyBearish(trade.getP());
+//		else 
+//		if(rules.toSell(trade.getP()), bullish)
+//			actions.sell(trade.getP());
 	}
 
 	private class Rules{
-		public Boolean topToBuy(Double price) {
-			Target current = bearish.getCurrent();
-			Boolean isequals = current.isEqual();
-			Boolean isskipped = current.isBelow() && current.isSkipped();
-			Boolean isnotrebought = !current.isRebought();
-			Boolean ispreviousbought = bearish.isPreviousBought() || bearish.isPreviousRebought();
-			if ((isequals || isskipped) && ispreviousbought && isnotrebought) {
-				current.setState(State.REBOUGHT);
-				System.out.println("price : "+price+"\n"+bearish.toString());
+		public Boolean toBuy(Double price, Target target) {
+			boolean iscurrentequal = target.equals(price);
+			boolean iscurrentskipped = target.isSkipped();
+			boolean iscurrentnotbought = !target.isBought();
+			boolean isnextequal = target.getNext().equals(price);
+			boolean isnextskipped = target.getNext().isSkipped();
+			boolean isnextnotbought = !target.getNext().isBought();
+			
+			boolean iscurrenttobuy = (iscurrentequal || iscurrentskipped) && iscurrentnotbought;
+			boolean isnexttobuy = (isnextequal || isnextskipped) && isnextnotbought;
+			
+			if (iscurrenttobuy || isnexttobuy)
 				return true;
-			}
 			return false;
 		}
-		public Boolean deepToBuy(Double price) {
-			Target current = bearish.getCurrent();
-			if(current.isBought())
-				return false;
-			boolean isequals = (current.isEqual() && current.isWaiting());
-			boolean isskipped = current.isAbove() && current.isSkipped();
-			if (isequals|| isskipped) {
-				current.setState(State.BOUGHT);
-				System.out.println("price : "+price+"\n"+bearish.toString());
-				return true;
-			}
-			return false;
-		}
-		public Boolean topToSell(Double price) {
-			Target current = bearish.getCurrent();
-			if(current.isRebought() && current.isAbove()) {
-				current.setState(State.SOLD);
-				System.out.println("price : "+price+"\n"+bearish.toString());
-				return true;
-			}
-			return false;
-		}
+
 	}
 	
 	private class Actions{
-		public void buy(Double price) {
-//			System.out.println(price +"\n BUY : "+bearish.toString());
-			
+		public void buyBullish(Double price) {
+			bullish.setState(State.BOUGHT);
+			System.out.println(price+"\n BUY BULLISH : "+bullish.toString()+" / "+bullish.getNext().toString());
+			nextBullish();
 		}
-		public void sell(Double price) {
-//			System.out.println(price +"\n SELL : "+bearish.toString());
-			initBearishTargets(price);
+		
+		public void buyBearish(Double price) {
+			bearish.setState(State.BOUGHT);
+			System.out.println(price+"\n BUY BEARISH : "+bearish.toString()+" / "+bearish.getNext().toString());
+			nextBearish();
+			if(price == price-1)
+				System.out.println();
 		}
+		
+		public void nextBullish() {
+			bullish = bullish.getNext();
+			Target next = bullish.createNext();
+			next.setMarge(bullish.getMarge());
+			next.setInterval(bullish.getInterval());
+			next.setDirection(bullish.getDirection());
+		}
+		
+		public void nextBearish() {
+			bearish = bearish.getNext();
+			Target next = bearish.createNext();
+			next.setMarge(bearish.getMarge());
+			next.setInterval(bearish.getInterval());
+			next.setDirection(bearish.getDirection());
+		}
+		
+//		public void sell(Double price) {
+////	System.out.println(price +"\n SELL : "+bearish.toString());
+//	initBearishTargets(price);
+//}
 	}
 }

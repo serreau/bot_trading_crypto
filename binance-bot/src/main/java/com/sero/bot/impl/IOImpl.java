@@ -73,13 +73,9 @@ public class IOImpl implements IO {
 			}while(!jr.peek().equals(JsonToken.END_DOCUMENT));
 		    jr.close();
 		}
-		catch (UnsupportedEncodingException e) {
-		    e.printStackTrace();
-		} catch (FileNotFoundException e) {
-		    e.printStackTrace();
-		} catch (IOException e) {
-		    e.printStackTrace();
-		}
+		catch (Exception e) {
+		    System.out.println("Terminé");
+		} 
 	}
 
 	public void buy(double price, double amount) {

@@ -2,21 +2,20 @@ package com.sero.bot.model;
 
 import java.util.Observable;
 
+import com.sero.bot.config.Constants;
+
 public class Target extends Observable{
+	private Double price;
 	private Double marge;
 	private Double interval;
-	private Double price;
-	private Target next;
-	private Target previous;
+	
+	private Type type;
 	private State state;
 	private Location position;
-	private Location direction;
-	private Double relativemargemin;
-	private Double relativemargemax;
+	private Target next;
 	
 	public enum State{
 		WAITING,
-		SKIPPED,
 		BOUGHT,
 		SOLD
 	}
@@ -26,19 +25,44 @@ public class Target extends Observable{
 		EQUAL,
 		BELOW
 	}
+	
+	public enum Type{
+		BEARISH,
+		BULLISH
+	}
 
-	public Target(Double price) {
-		this.setPrice(price);
+	public Target(Double price, Type type) {
+		setPrice(price);
+		setType(type);
+		setMarge();
+		setInterval();
+		
+		setState(State.WAITING);
+		
+		if(isBearish()) {
+			setPosition(Location.ABOVE);
+			next = new Target(price+interval, Type.BEARISH);
+		}
+		else {
+			setPosition(Location.BELOW);
+			next = new Target(price-interval, Type.BULLISH);
+		}
+	}
+	
+	public Boolean isBearish() {
+		return type.equals(Type.BEARISH);
+	}
+	
+	public Boolean isBullish() {
+		return type.equals(Type.BULLISH);
 	}
 
 	public Double getMarge() {
 		return marge;
 	}
 
-	public void setMarge(Double marge) {
-		this.marge = marge;
-		relativemargemax = price + marge;
-		relativemargemin = price - marge;
+	public void setMarge() {
+			marge = price * Constants.MARGIN;
 	}
 
 	public Double getPrice() {
@@ -57,14 +81,6 @@ public class Target extends Observable{
 		this.next = next;
 	}
 
-	public Target getPrevious() {
-		return previous;
-	}
-
-	public void setPrevious(Target previous) {
-		this.previous = previous;
-	}
-
 	public State getState() {
 		return state;
 	}
@@ -81,24 +97,24 @@ public class Target extends Observable{
 		this.position = position;
 	}
 	
-	public Location getDirection() {
-		return direction;
+	public Double getMargeMin() {
+		return price-marge;
 	}
-
-	public void setDirection(Location direction) {
-		this.direction = direction;
+	
+	public Double getMargeMax() {
+		return price+marge;
 	}
 	
 	public Boolean equals(Double price) {
-		return price > relativemargemin && price < relativemargemax;
+		return price > getMargeMin() && price < getMargeMax();
 	}
 
 	public Boolean moreThan(Double price) {
-		return price < relativemargemin;
+		return price < getMargeMin();
 	}
 
 	public Boolean lessThan(Double price) {
-		return price > relativemargemax;
+		return price > getMargeMax();
 	}
 
 	public boolean equals(Target t) {
@@ -116,9 +132,6 @@ public class Target extends Observable{
 	public boolean isWaiting() {
 		return state.equals(State.WAITING);
 	}
-	public boolean isSkipped() {
-		return state.equals(State.SKIPPED);
-	}
 	public boolean isBought() {
 		return state.equals(State.BOUGHT);
 	}
@@ -134,34 +147,24 @@ public class Target extends Observable{
 	public boolean isBelow() {
 		return position.equals(Location.BELOW);
 	}
-
 	public Double getInterval() {
 		return interval;
 	}
-
-	public void setInterval(Double interval) {
-		this.interval = interval;
+	public void setInterval() {
+		if(type.equals(Type.BEARISH))
+			this.interval = price/Constants.BEARISH_DIVISOR;
+		else
+			this.interval = price/Constants.BULLISH_DIVISOR;
 	}
-
-	public void goToNext() {
-		
+	public Type getType() {
+		return type;
 	}
-	public Target createNext() {
-		if (direction.equals(Location.BELOW))
-			next = new Target(getPrice()-getInterval());
-		else 
-		if (direction.equals(Location.ABOVE))
-			next = new Target(getPrice()+getInterval());
-		next.setPrevious(this);
-		
-		next.setState(State.WAITING);
-		
-		return next;
+	public void setType(Type type) {
+		this.type = type;
+		setInterval();
 	}
 	
 	public void refresh(Double price) {
-		
-		
 		if(equals(price))
 			setPosition(Location.EQUAL);
 		else
@@ -179,31 +182,15 @@ public class Target extends Observable{
 		else
 		if(getNext().lessThan(price))
 			getNext().setPosition(Location.BELOW);
-		
-		if(getNext().moreThan(this) && getNext().isBelow() 
-				|| getNext().lessThan(this) && getNext().isAbove())
-			getNext().setState(State.SKIPPED);
+	}
+
+	public boolean isSkipped(Double price) {
+		if(type.equals(Type.BEARISH) && moreThan(price))
+			return true;
+		else if(type.equals(Type.BULLISH) && lessThan(price))
+			return true;
 			
-		
-		
-//		if (t.equals(price)) {
-//			t.setPosition(Position.EQUAL);
-//			current = t;
-//		}
-//		else if (t.moreThan(price)) {
-//			t.setPosition(Position.ABOVE);
-//			if (current.moreThan(t)) {
-//				current = t;
-//				current.setState(State.SKIPPED);
-//			}
-//		}
-//		else if (t.lessThan(price)) {
-//			t.setPosition(Position.BELOW);
-//			if (current.lessThan(t)) {
-//				current = t;
-//				current.setState(State.SKIPPED);
-//			}
-//		}
+		return false;
 	}
 	
 	@Override

@@ -18,110 +18,61 @@ public class CoreImpl implements Core {
 	
 	@Override
 	public void init(Trade trade) {
-		wallet = new Wallet(Constants.CAPITAL);
 //		
 		rules = new Rules();
 		actions = new Actions();
 		
 		initBearishTargets(trade.getP());
-		initBullishTargets(trade.getP());
 	}
 
-	private void initBearishTargets(Double startprice) {
-		bearish = new Target(startprice);
-		bearish.setMarge(startprice*Constants.MARGIN);
-		bearish.setInterval(startprice/Constants.BEARISH_DIVISOR);
-		bearish.setDirection(Location.BELOW);
-		bearish.setState(State.WAITING);
-		
-		Target next = bearish.createNext();
-		next.setMarge(bearish.getMarge());
-		next.setInterval(bearish.getInterval());
-		next.setDirection(bearish.getDirection());
-		
-	}
-	
-	private void initBullishTargets(Double startprice) {
-		bullish = new Target(startprice);
-		bullish.setMarge(startprice*Constants.MARGIN);
-		bullish.setInterval(startprice/Constants.BULLISH_DIVISOR);
-		bullish.setDirection(Location.ABOVE);
-		bullish.setState(State.WAITING);
-		
-		Target next = bullish.createNext();
-		next.setMarge(bullish.getMarge());
-		next.setInterval(bullish.getInterval());
-		next.setDirection(bullish.getDirection());
+	private void initBearishTargets(Double price) {
+		bearish = new Target(price, Target.Type.BEARISH);
+		System.out.println(price+"\n BUY BEARISH : "+bearish.toString()+" / "+bearish.getNext().toString());
 	}
 
 	@Override
 	public void run(Parameter parameter) {
 		Trade trade = parameter.getInstance();
-		bearish.refresh(trade.getP());
-		bullish.refresh(trade.getP());
-		if(rules.toBuy(trade.getP(), bullish))
-			actions.buyBullish(trade.getP());
-		else
+		
 		if(rules.toBuy(trade.getP(), bearish))
 			actions.buyBearish(trade.getP());
-//		else 
-//		if(rules.toSell(trade.getP()), bullish)
-//			actions.sell(trade.getP());
+		
 	}
 
 	private class Rules{
 		public Boolean toBuy(Double price, Target target) {
-			boolean iscurrentequal = target.equals(price);
-			boolean iscurrentskipped = target.isSkipped();
-			boolean iscurrentnotbought = !target.isBought();
 			boolean isnextequal = target.getNext().equals(price);
-			boolean isnextskipped = target.getNext().isSkipped();
+			boolean isnextskipped = target.getNext().isSkipped(price);
 			boolean isnextnotbought = !target.getNext().isBought();
 			
-			boolean iscurrenttobuy = (iscurrentequal || iscurrentskipped) && iscurrentnotbought;
 			boolean isnexttobuy = (isnextequal || isnextskipped) && isnextnotbought;
 			
-			if (iscurrenttobuy || isnexttobuy)
+			if (isnexttobuy)
 				return true;
 			return false;
 		}
 
+//		public boolean toRevert(Double price, Target target) {
+//			boolean torevert = target.equals(price-target.getInterval());
+//			boolean torevertskipped = target.lessThan(price-target.getInterval());
+//			
+//			if(torevert || torevertskipped) 
+//				return true;
+//			
+//			return false;
+//		}
 	}
 	
 	private class Actions{
-		public void buyBullish(Double price) {
-			bullish.setState(State.BOUGHT);
-			System.out.println(price+"\n BUY BULLISH : "+bullish.toString()+" / "+bullish.getNext().toString());
-			nextBullish();
-		}
-		
+//		public void buyBullish(Double price) {
+//			System.out.println(price+"\n BUY BULLISH : "+bullish.toString());
+//			System.out.println();
+//		}
+
 		public void buyBearish(Double price) {
-			bearish.setState(State.BOUGHT);
-			System.out.println(price+"\n BUY BEARISH : "+bearish.toString()+" / "+bearish.getNext().toString());
-			nextBearish();
-			if(price == price-1)
-				System.out.println();
+			System.out.println(price+"\n BUY BEARISH : "+bearish.toString());
+			System.out.println();
 		}
-		
-		public void nextBullish() {
-			bullish = bullish.getNext();
-			Target next = bullish.createNext();
-			next.setMarge(bullish.getMarge());
-			next.setInterval(bullish.getInterval());
-			next.setDirection(bullish.getDirection());
-		}
-		
-		public void nextBearish() {
-			bearish = bearish.getNext();
-			Target next = bearish.createNext();
-			next.setMarge(bearish.getMarge());
-			next.setInterval(bearish.getInterval());
-			next.setDirection(bearish.getDirection());
-		}
-		
-//		public void sell(Double price) {
-////	System.out.println(price +"\n SELL : "+bearish.toString());
-//	initBearishTargets(price);
-//}
+
 	}
 }

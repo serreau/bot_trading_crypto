@@ -30,6 +30,8 @@ public class Target extends Observable{
 		BEARISH,
 		BULLISH
 	}
+	
+	
 
 	public Target(Double price, Type type) {
 		setPrice(price);
@@ -41,11 +43,11 @@ public class Target extends Observable{
 		
 		if(isBearish()) {
 			setPosition(Location.ABOVE);
-			next = new Target(price+interval, Type.BEARISH);
+			next = new Target(price-interval, Type.BEARISH);
 		}
 		else {
 			setPosition(Location.BELOW);
-			next = new Target(price-interval, Type.BULLISH);
+			next = new Target(price+interval, Type.BULLISH);
 		}
 	}
 	
